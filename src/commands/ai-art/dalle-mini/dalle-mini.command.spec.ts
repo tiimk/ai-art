@@ -41,7 +41,7 @@ describe('AiArtService', () => {
       ],
     }).compile();
 
-    service = await module.get<DalleMiniCommand>(DalleMiniCommand);
+    service = await module.resolve<DalleMiniCommand>(DalleMiniCommand);
   });
 
   it('should be defined', () => {
