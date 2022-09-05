@@ -5,33 +5,9 @@ on:
     types:
       - published
   workflow_dispatch:
-  
+
 
 jobs:
-  release-sentry:
-    name: Release sentry
-    needs: build-and-push-to-ghcr
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-      - name: Create sentry release for main application
-        uses: getsentry/action-release@v1
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: production
-      - name: Create sentry release for self hosted application
-        uses: getsentry/action-release@v1
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG_SELF_HOSTED }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_SELF_HOSTED }}
-        with:
-          environment: production
-
   build-and-push-to-ghcr:
     name: Build and push Docker image to GitHub Container registry
     runs-on: ubuntu-latest
@@ -65,25 +41,3 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} , ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         build-args: |
           ENVIRONMENT=production
-
-  update-heroku-button-config:
-   name: Update heroku button config
-   needs:
-    - release-sentry
-   runs-on: ubuntu-latest
-   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Update app.json sentry release name
-      uses: jossef/action-set-json-field@v2
-      with:
-        file: app.json
-        field: env.SENTRY_RELEASE_NAME.value
-        value: ${{ github.sha }}
-    - name: Push updated files to github
-      run: |
-        git config --global user.name 'karafra'
-        git config --global user.email 'karafra@users.noreply.github.com'
-        git commit -am ":bookmark: Update sentry release name"
-        git push
-      
